@@ -50,6 +50,7 @@ def play_once():
     print(f"\nПопытки закончились. Я загадал число {secret}.")
     game_history.append({'secret': secret, 'guesses': guesses, 'result': 'LOSE'})
 
+#pull request test
 
 # def show_history():
 #     if not game_history:
