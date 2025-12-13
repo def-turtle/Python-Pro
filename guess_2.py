@@ -41,7 +41,8 @@ def play_once():
         else:
             print("Не угадал.")
             if num == "y":
-                if guess < secret:
+      
+            if guess < secret:
                     print("Подсказка: моё число БОЛЬШЕ.")
                 else:
                     print("Подсказка: моё число МЕНЬШЕ.")
@@ -49,6 +50,7 @@ def play_once():
     
     print(f"\nПопытки закончились. Я загадал число {secret}.")
     game_history.append({'secret': secret, 'guesses': guesses, 'result': 'LOSE'})
+#hello this is pull request
 
 
 # def show_history():
@@ -77,3 +79,4 @@ def main():
             break
 
 main()
+
