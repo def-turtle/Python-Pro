@@ -1,0 +1,2 @@
+Transactions: 0
+Money: 100500
