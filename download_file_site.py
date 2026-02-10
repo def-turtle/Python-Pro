@@ -11,9 +11,9 @@ app = flask.Flask(__name__, static_folder='static', template_folder='templates')
 @app.route("/")
 def home():
     return "<h1>Hello HTTP world</h1>"
-@app.route("/example-file_download")
-def download_file():
-    file_name = "example.txt"
+@app.route("/example-file_download/<path:filename>")
+def download_file(filename: str):
+    file_name = filename
     random_content = "bla bla bla " * 1000  # Simulate a large file by repeating content
     # Create a temporary file and return it
     temp_file_path = FILESDIR / "temp_download.txt"

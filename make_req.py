@@ -5,14 +5,14 @@ from tempfile import NamedTemporaryFile
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
+file_name = input("Enter file name: ")
 def make_req(base_url="http://localhost:5000") -> None:
     """Download a file from the server and upload it back."""
     logger.info(f"Making requests to {base_url}")
     
     # Download file
     try:
-        download_response = requests.get(f"{base_url}/example-file_download")
+        download_response = requests.get(f"{base_url}/example-file_download/{file_name}")
         if download_response.status_code == 200:
             logger.info("File downloaded successfully")
             file_content = download_response.content
