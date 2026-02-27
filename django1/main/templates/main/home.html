@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h1>Hello from Django Templates!</h1>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% else %}
+        <p>No message provided.</p>
+    {% endif %}
+
+    {% comment %}
+    {% for i in 1|make_list %}
+        <p>Item {{ i }}</p>
+    {% endfor %}
+    {% endcomment %}
+    {% include "main/header.html" %}
+</body>
+</html>
