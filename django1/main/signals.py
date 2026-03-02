@@ -9,9 +9,9 @@ LOG_FILE = settings.BASE_DIR / 'login_times.log'
 def log_user_login(sender, request, user, **kwargs):
     ts = timezone.now().isoformat()
     ip = request.META.get('REMOTE_ADDR', '')
-    line = f"{ts} - {user.username} - {ip}\n"
+    line = f"{ts} - {user.username} - {ip}"
     try:
-        with open(LOG_FILE, 'a', encoding='utf-8') as f:
+        with open(LOG_FILE, 'w', encoding='utf-8') as f:
             f.write(line)
     except Exception:
         pass
