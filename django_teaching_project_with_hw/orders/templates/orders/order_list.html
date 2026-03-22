@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders</title>
+</head>
+<body>
+    <h2>Urls:</h2>
+    <ul>
+        <li><a href="/admin">Admin Panel</a></li>
+        <li><a href="/admin/orders/order/add/">Create Order</a></li>
+        <li><a href="/admin/auth/group/add/">Create Group</a></li>
+        <li><a href="/orders/">Orders List</a></li>
+        <li><a href="/groups/">Groups List</a></li>
+    </ul>
+    <h2>Orders</h2>
+    <ul>
+        {% for order in orders %}
+            <li>Order: {{ order.title }} - Amount: {{ order.amount }} - Status: {{ order.status }} - created: {{ order.created_at }}</li>
+        {% endfor %}
+    </ul>
+        <h2>Groups:</h2>
+    <ul>
+        {% for group in groups %}
+            <li>{{ group.name }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
