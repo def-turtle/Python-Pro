@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jasná 3D: Alpine Recovery Sim</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #game-ui { position: absolute; top: 20px; left: 20px; color: white; z-index: 10; display: none; }
+        #map-selector {
+            position: absolute; inset: 0; 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://r.jina.ai/i/9e0085d581174982998a1a3674686411');
+            background-size: cover; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+        }
+        .btn { padding: 12px 25px; margin: 10px; cursor: pointer; border-radius: 5px; font-weight: bold; border:none; color: white; }
+        .blue { background: #3498db; } .red { background: #e74c3c; } .black { background: #222; border: 1px solid #444; }
+        
+        #condition-bar { width: 200px; height: 12px; background: #333; border: 1px solid #fff; margin-top: 5px; }
+        #condition-fill { width: 100%; height: 100%; background: #2ecc71; transition: 0.2s; }
+        
+        #resting-tag { color: #2ecc71; font-weight: bold; display: none; margin-top: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        #report { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 30; color: white; text-align: center; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+<div id="game-ui">
+    <div style="font-size: 2.5em;"><span id="speed">0</span> <small>km/h</small></div>
+    <div style="font-size: 0.8em; opacity: 0.7;">BODY CONDITION</div>
+    <div id="condition-bar"><div id="condition-fill"></div></div>
+    <div id="resting-tag">RECOVERING...</div>
+</div>
+
+<div id="report">
+    <h1 style="color: #e74c3c;">IMPACT DETECTED</h1>
+    <p id="impact-desc" style="max-width: 500px; font-size: 1.1em;"></p>
+    <div style="display:flex; gap:10px;">
+        <button class="btn blue" onclick="continueRun()">GET BACK UP</button>
+        <button class="btn red" onclick="location.reload()">RETRY</button>
+    </div>
+</div>
+
+<div id="map-selector">
+    <h1 style="color:white; letter-spacing: 5px;">JASNÁ NÍZKE TATRY</h1>
+    <button class="btn blue" onclick="startRun(0.06, 15)">13 Biela Púť (Green)</button>
+    <button class="btn red" onclick="startRun(0.15, 25)">1a Maják (Red)</button>
+    <button class="btn black" onclick="startRun(0.30, 45)">31 Dereše (Extreme)</button>
+</div>
+
+<canvas id="c"></canvas>
+
+<script>
+const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+let gameActive = false, playerX = 0, speed = 0, health = 100, distance = 0, gravity = 0, maxS = 0;
+let obstacles = [], snow = [];
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+function startRun(g, s) {
+    gravity = g; maxS = s;
+    document.getElementById('map-selector').style.display = 'none';
+    document.getElementById('game-ui').style.display = 'block';
+    gameActive = true;
+    for(let i=0; i<150; i++) snow.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, s: Math.random()*5+5});
+    update();
+}
+
+function continueRun() {
+    document.getElementById('report').style.display = 'none';
+    speed = 0; obstacles = []; gameActive = true; update();
+}
+
+function update() {
+    if(!gameActive) return;
+
+    // PHYSICS & RECOVERY
+    let isBraking = keys['ArrowDown'];
+    let isTurning = keys['ArrowLeft'] || keys['ArrowRight'];
+
+    if (isBraking) {
+        speed = Math.max(0, speed - 0.4); // Hard brake
+    } else {
+        speed = Math.min(speed + gravity, maxS);
+    }
+
+    // Recovery Logic
+    if (speed < 0.5 && health < 100) {
+        health = Math.min(100, health + 0.15); // Recover 0.15% per frame
+        document.getElementById('resting-tag').style.display = 'block';
+    } else {
+        document.getElementById('resting-tag').style.display = 'none';
+    }
+
+    // Injury Wobble Penalty
+    let wobble = (100 - health) * 0.15;
+    playerX += (Math.sin(distance/15) * wobble);
+
+    if(keys['ArrowLeft']) playerX += 7;
+    if(keys['ArrowRight']) playerX -= 7;
+    distance += speed;
+
+    render();
+    requestAnimationFrame(update);
+}
+
+function render() {
+    // Basic 3D Sky/Track
+    ctx.fillStyle = "#fff"; ctx.fillRect(0,0, canvas.width, canvas.height);
+    for(let i=0; i<canvas.height/2; i++) {
+        let y = canvas.height/2 + i, p = i / (canvas.height/2), w = canvas.width * p * 2.5;
+        ctx.fillStyle = (Math.floor((i+distance)/50)%2==0) ? "#f5faff" : "#fff";
+        ctx.fillRect(canvas.width/2 - w/2 + (playerX*p), y, w, 1);
+    }
+
+    // Snow
+    ctx.fillStyle = "#e0f0ff";
+    snow.forEach(s => { s.y += s.s + speed; if(s.y > canvas.height) s.y = 0; ctx.fillRect(s.x, s.y, 2, 2); });
+
+    // Obstacles
+    if(speed > 1 && Math.random() < 0.05) obstacles.push({x: (Math.random()-0.5)*4000, z: 1000});
+    for(let i=obstacles.length-1; i>=0; i--) {
+        let o = obstacles[i]; o.z -= speed;
+        let sx = canvas.width/2 + (o.x + playerX) * (200/o.z), sy = canvas.height/2 + (5000/o.z), sz = 1800/o.z;
+        if(o.z > 10) {
+            ctx.fillStyle = "#0a2f1f";
+            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx-sz, sy+sz*2.5); ctx.lineTo(sx+sz, sy+sz*2.5); ctx.fill();
+            if(o.z < 60 && Math.abs(sx - canvas.width/2) < 40) {
+                gameActive = false;
+                let dmg = (speed**2)/80; health -= dmg;
+                document.getElementById('report').style.display = 'flex';
+                document.getElementById('impact-desc').innerText = `CRASH AT ${Math.floor(speed*6)} km/h. Injury Severity: ${dmg > 30 ? 'High' : 'Low'}. Condition: ${Math.floor(Math.max(0,health))}%`;
+            }
+        } else obstacles.splice(i,1);
+    }
+
+    // Skis
+    ctx.strokeStyle = "#111"; ctx.lineWidth = 12;
+    ctx.beginPath(); ctx.moveTo(canvas.width/2-75, canvas.height); ctx.lineTo(canvas.width/2-40, canvas.height-170); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(canvas.width/2+75, canvas.height); ctx.lineTo(canvas.width/2+40, canvas.height-170); ctx.stroke();
+
+    document.getElementById('speed').innerText = Math.floor(speed * 6);
+    document.getElementById('condition-fill').style.width = health + "%";
+}
+
+const keys = {};
+window.onkeydown = (e) => keys[e.code] = true;
+window.onkeyup = (e) => keys[e.code] = false;
+</script>
+</body>
+</html>
